@@ -5,9 +5,11 @@
 #include <mutex>
 #include <algorithm>
 
+#define MEM_TABLE_SIZE      11
+
 class MemoryPool {
 public:
-    MemoryPool() { memset(mList, 0, 8 * sizeof(char*)); }
+    MemoryPool() { memset(mList, 0, MEM_TABLE_SIZE * sizeof(char*)); }
 
     ~MemoryPool();
 
@@ -18,8 +20,8 @@ private:
     int getIndex(int bytes) const;
 private:
     std::mutex mMutex;
-    char *mList[8];
-    static const int mTable[8];
+    char *mList[MEM_TABLE_SIZE];
+    static const int mTable[MEM_TABLE_SIZE];
 };
 
 #endif

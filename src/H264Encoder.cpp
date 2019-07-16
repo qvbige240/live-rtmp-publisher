@@ -1,3 +1,4 @@
+#include <iostream>
 #include "H264Encoder.h"
 
 H264Encoder::H264Encoder(int width, int height, int fps, int bitrate): mPts(0) {
@@ -15,7 +16,7 @@ H264Encoder::H264Encoder(int width, int height, int fps, int bitrate): mPts(0) {
     param.i_height = height;
     param.i_fps_den = 1;
     param.i_fps_num = fps;
-    param.i_keyint_max = fps;
+    param.i_keyint_max = 10*fps;
 
     param.rc.i_rc_method = X264_RC_ABR;
     param.rc.i_bitrate = bitrate;
@@ -45,6 +46,10 @@ std::pair<int, char*> H264Encoder::encode(char* frame) {
 
     size = x264_encoder_encode(mHandle, &mNal, &temp, &mPicture, &out);
 
+#ifdef _DEBUG
+    printf("## nalu type(%d) len(%d)\n", mNal->i_type, size);
+#endif
+
     return std::make_pair(size, reinterpret_cast<char*>(mNal->p_payload));
 }
 
@@ -53,6 +58,10 @@ std::pair<int, char*> H264Encoder::getMetadata() {
 
     x264_encoder_headers(mHandle, &mNal, &temp);
     size = mNal[0].i_payload + mNal[1].i_payload;
+
+#ifdef _DEBUG
+	std::cout << "metadata: " << size << std::endl;
+#endif
 
     return std::make_pair(size, reinterpret_cast<char*>(mNal->p_payload));
 }

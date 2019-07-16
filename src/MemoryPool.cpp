@@ -1,10 +1,10 @@
 #include "MemoryPool.h"
 
-const int MemoryPool::mTable[8] = { 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 };
+const int MemoryPool::mTable[MEM_TABLE_SIZE] = { 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 65536*2, 65536*3 };
 
 MemoryPool::~MemoryPool() {
     char *head, *next;
-    for (int i = 0; i != 8; ++i) {
+    for (int i = 0; i != MEM_TABLE_SIZE; ++i) {
         head = mList[i];
         while (head != NULL) {
             next = *(reinterpret_cast<char**>(head));
@@ -37,5 +37,5 @@ void MemoryPool::putChunk(int bytes, char* data) {
 }
 
 inline int MemoryPool::getIndex(int bytes) const {
-    return std::upper_bound(mTable, mTable + 8, bytes) - mTable;
+    return std::upper_bound(mTable, mTable + MEM_TABLE_SIZE, bytes) - mTable;
 }

@@ -22,4 +22,4 @@ configure_file(
 
 add_executable(publisher ${PROJECT_SOURCES})
 target_link_libraries(publisher ${PROJECT_LIBS})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -D_DEBUG -Wall")
