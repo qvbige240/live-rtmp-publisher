@@ -34,6 +34,35 @@ H264Encoder::~H264Encoder() {
     x264_picture_clean(&mPicture);
 }
 
+#include <stdio.h>
+
+typedef struct _PrivInfo
+{
+    // test..
+    FILE        *fp;
+    size_t      offset;
+    int         file_size;
+    unsigned    buf_size;
+    char        *buf;
+} PrivInfo;
+
+static int vpk_file_save(const char *filename, void *data, size_t size)
+{
+    FILE *fp = 0;
+    size_t ret = 0;
+    //return_val_if_fail(filename != NULL && data != NULL, -1);
+
+    fp = fopen(filename, "a+");
+    if (fp != NULL && data)
+    {
+        ret = fwrite(data, 1, size, fp);
+        fclose(fp);
+    }
+    if (ret != size)
+        printf("fwrite size(%ld != %ld) incorrect!", ret, size);
+
+    return ret;
+}
 std::pair<int, char*> H264Encoder::encode(char* frame) {
     int temp, size;
     x264_picture_t out;
@@ -50,6 +79,19 @@ std::pair<int, char*> H264Encoder::encode(char* frame) {
     printf("## nalu type(%d) len(%d)\n", mNal->i_type, size);
 #endif
 
+#ifdef _SAVE_H264
+    unsigned char *p = (unsigned char *)mNal->p_payload;
+    std::cout << "nal size: " << size << std::endl;
+    int i = 0;
+    for (i = 0; i < 32; i++)
+        printf(" %02x", p[i]);
+    printf("\n");
+
+    char nalu_head[4] = {0x00, 0x00, 0x00, 0x01};
+    vpk_file_save("local.h264", nalu_head, 4);
+    vpk_file_save("local.h264", p, size);
+#endif
+
     return std::make_pair(size, reinterpret_cast<char*>(mNal->p_payload));
 }
 
@@ -60,7 +102,37 @@ std::pair<int, char*> H264Encoder::getMetadata() {
     size = mNal[0].i_payload + mNal[1].i_payload;
 
 #ifdef _DEBUG
-	std::cout << "metadata: " << size << std::endl;
+    std::cout << "metadata: " << size << std::endl;
+#endif
+
+#ifdef _SAVE_H264
+    unsigned char *p = (unsigned char *)mNal->p_payload;
+
+    int i = 0;
+    for (i = 0; i < size; i++)
+        printf("%02x%s", p[i], i % 16 == 15 ? "\n" : " ");
+    printf("\n");
+
+    int len = (p[2] << 8) | p[3];
+    int pps = (p[4 + len + 2] << 8) | p[4 + len + 3];
+    printf("sps len: %d\n", len);
+    printf("pps len: %d\n", pps);
+
+    //std::cout<<std::hex;
+    //int a = 40;
+    //std::cout<<a;
+    //for (int i = 0; i < size; i++)
+    //	std::cout <<std::hex << p[i] << " ";
+    //std::cout<<std::endl;
+
+    char nalu_head[4] = {0x00, 0x00, 0x00, 0x01};
+    // sps
+    vpk_file_save("local.h264", nalu_head, 4);
+    vpk_file_save("local.h264", p + 4, len);
+
+    // pps
+    vpk_file_save("local.h264", nalu_head, 4);
+    vpk_file_save("local.h264", p + 8 + len, size - len - 8);
 #endif
 
     return std::make_pair(size, reinterpret_cast<char*>(mNal->p_payload));

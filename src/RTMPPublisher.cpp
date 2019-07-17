@@ -38,7 +38,7 @@ void RTMPPublisher::run() {
     while (true) {
         RTMPPacket &packet = mQueue.front();
         packet.m_nInfoField2 = mRTMP->m_stream_id;
-        packet.m_nTimeStamp = RTMP_GetTime();
+        packet.m_nTimeStamp = RTMP_GetTime() & 0xffffff;
 
         if (!RTMP_IsConnected(mRTMP)) {
             std::cout << "can not connect to server" << std::endl;
