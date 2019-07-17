@@ -2,3 +2,4 @@
 *.swp
 publisher
 build
+.vscode

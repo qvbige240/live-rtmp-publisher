@@ -36,12 +36,13 @@ int main(int argc, char *argv[]) {
     int bitrate = 128;
     char ch;
     bool enable = false;
+	char *file = "./test.h264";
 
     if (argc < 2) {
         showUsage();
     }
 
-    while ((ch = getopt(argc, argv, "w:h:f:b:m")) != -1) {
+	while ((ch = getopt(argc, argv, "w:h:f:b:d:m")) != -1) {
         switch (ch) {
             case 'w':
                 width = atoi(optarg);
@@ -54,6 +55,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'b':
                 bitrate = atoi(optarg);
+                break;
+            case 'd':
+                file = optarg;
                 break;
             case 'm':
                 enable = true;
@@ -93,7 +97,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    H264Stream videoStream(videoSource, queue, pool, fps, bitrate);
+    H264Stream videoStream(videoSource, queue, pool, fps, bitrate, file);
     AACStream audioStream(pcm, queue, pool);
 
     std::thread videoEncodeThread(&H264Stream::run, &videoStream);
