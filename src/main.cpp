@@ -29,6 +29,8 @@ void showUsage() {
 }
 
 /* ./publisher -w 704 -h 576 -f 25 -b 5120 rtmp://172.17.25.131/live/1 */
+/* ./avcc_publisher -w 704 -h 576 -f 25 rtmp://172.20.25.228/live/1 -d record_01.h264 */
+/*  annexb_publisher  00 00 00 01 */
 int main(int argc, char *argv[]) {
     int width = 320;
     int height = 240;

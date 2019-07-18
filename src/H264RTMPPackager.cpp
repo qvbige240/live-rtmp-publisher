@@ -8,7 +8,11 @@ RTMPPacket H264RTMPPackager::pack(char* buf, const char* data, int length) const
     packet.m_packetType = RTMP_PACKET_TYPE_VIDEO;
     packet.m_nChannel = 0x04;
     packet.m_hasAbsTimestamp = 0;
+#ifdef H264_AVCC
     packet.m_nBodySize = length + 5;
+#else
+    packet.m_nBodySize = length + 5 + 4;
+#endif
     packet.m_body = body;
 
     *(body++) = (data[4] & 0x1f) == 0x05 ? 0x17 : 0x27;
@@ -16,6 +20,12 @@ RTMPPacket H264RTMPPackager::pack(char* buf, const char* data, int length) const
     *(body++) = 0x00;
     *(body++) = 0x00;
     *(body++) = 0x00;
+#ifndef H264_AVCC
+    *(body++) = length >> 24 & 0xff;
+    *(body++) = length >> 16 & 0xff;
+    *(body++) = length >> 8 & 0xff;
+    *(body++) = length & 0xff;
+#endif
     memcpy(body, data, length);
 
     return packet;
