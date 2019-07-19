@@ -62,52 +62,6 @@ H264Reader::~H264Reader() {
 
 }
 
-//typedef struct _PrivInfo
-//{
-//	// test..
-//	FILE*				fp;
-//	size_t				offset;
-//	int					file_size;
-//	unsigned			buf_size;
-//	char				*buf;
-//} PrivInfo;
-//
-//static int vpk_file_save(const char* file, void* data, size_t size)
-//{
-//	FILE* fp = 0;
-//	size_t ret = 0;
-//	//return_val_if_fail(file != NULL && data != NULL, -1);
-//
-//	fp = fopen(file, "a+");
-//	if (fp != NULL && data)
-//	{
-//		ret = fwrite(data, 1, size, fp);
-//		fclose(fp);
-//	}
-//	if (ret != size)
-//		printf("fwrite size(%d != %d) incorrect!", ret, size);
-//
-//	return ret;
-//}
-
-//static int vpk_file_open(PrivInfo* p, const char* file)
-//{
-//	PrivInfo* priv = p;
-//
-//	size_t size = 1024;
-//
-//	int result;
-//	priv->fp = fopen(file, "r");
-//	fseek(priv->fp, 0, SEEK_END);
-//	priv->file_size = ftell(priv->fp);
-//	fseek(priv->fp, 0, SEEK_SET);
-//
-//	priv->buf_size = (priv->offset + size) <= priv->file_size ? size : priv->file_size;
-//	priv->buf = malloc(priv->buf_size);
-//	return 0;
-//}
-
-
 typedef struct h264_nalu {
 	size_t	nalu_len;
 	char	nalu_type;
@@ -184,6 +138,79 @@ static int read_nalu(const char *buffer, size_t size, size_t offset, h264_nalu_t
 	return 0;
 }
 
+//#define SUBNALU_TO_AVCC_FORMAT
+#ifdef SUBNALU_TO_AVCC_FORMAT
+static inline size_t find_sub_code(char *buf)
+{
+	if (buf[0] != 0x00 || buf[1] != 0x00) {
+		return 0;
+	}
+
+	if (buf[2] == 0x01) {
+		return 3;
+	}
+
+	return 0;
+}
+
+size_t multi_nalu_process(char *dst, char *src, size_t len)
+{
+	char *d = dst;
+	size_t dst_len = 0;
+	char *p = src;
+	size_t pos = 0, start = 0;
+	size_t offset = 0;
+	while (offset < len)
+	{
+		while (pos + offset < len)
+		{
+			start = find_sub_code(p + offset + pos);
+			if (start) break;
+			pos++;
+		}
+
+		printf("pos: %ld\n", pos);
+		d[dst_len + 2] = pos >> 8 & 0xff;
+		d[dst_len + 3] = pos & 0xff;
+		dst_len += 4;
+		memcpy(d + dst_len, p + offset, pos);
+		dst_len += pos;
+		offset += (pos + start);
+		pos = 0;
+	}
+
+	return dst_len;
+}
+#endif //SUBNALU_TO_AVCC_FORMAT
+
+#if 0
+size_t split_nalu_process(char *dst, char *src, size_t len)
+{
+	char *d = dst;
+	size_t dst_len = 0;
+	char *p = src;
+	size_t offset = 0;
+    size_t remain = len;
+
+	size_t total = len;
+	size_t nal_len = total / 5 + 1;
+	while (remain > 0)
+	{
+		if (remain <= nal_len)
+			nal_len = remain;
+		//size_t nal_len = 1024 * 21;
+		printf("nal_len: %ld\n", nal_len);
+		d[dst_len+2] = nal_len >> 8 & 0xff;
+		d[dst_len+3] = nal_len & 0xff;
+		dst_len += 4;
+		memcpy(d+dst_len, p+offset, nal_len);
+		dst_len += nal_len;
+		offset += nal_len;
+		remain -= nal_len;
+	}
+	return dst_len;
+}
+#endif
 
 std::pair<int, char*> H264Reader::readnal()
 {
@@ -193,8 +220,19 @@ std::pair<int, char*> H264Reader::readnal()
 	len = read_nalu((const char*)mData, mLength, mPos, &nalu);
 	if (len != 0) {
 		mPos += len;
+		//printf("## nalu type(%d) len(%ld)\n", nalu.nalu_type, nalu.nalu_len);
+		//return std::make_pair(nalu.nalu_len, nalu.nalu_data);
+
+#ifdef SUBNALU_TO_AVCC_FORMAT
+		memset(mBuffer, 0x00, sizeof(mBuffer));
+		size_t total = multi_nalu_process(mBuffer, nalu.nalu_data, nalu.nalu_len);
+
+		printf("## nalu type(%d) len(%ld) retset-len(%ld)\n", nalu.nalu_type, nalu.nalu_len, total);
+		return std::make_pair(total, mBuffer);
+#else
 		printf("## nalu type(%d) len(%ld)\n", nalu.nalu_type, nalu.nalu_len);
 		return std::make_pair(nalu.nalu_len, nalu.nalu_data);
+#endif
 	}
 
 	std::cout << "===== read readnal error or end, mPos" << mPos << std::endl;
