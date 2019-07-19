@@ -23,4 +23,4 @@ configure_file(
 add_executable(publisher ${PROJECT_SOURCES})
 target_link_libraries(publisher ${PROJECT_LIBS})
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -D_DEBUG -D_SAVE_H264 -DUSE_H264_READER -DH264_AVCC -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -D_DEBUG -D_SAVE_H264 -DH264_AVCC -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -D_DEBUG -D_SAVE_H264 -DUSE_H264_READER -Wall")

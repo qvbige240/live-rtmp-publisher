@@ -100,10 +100,10 @@ int main(int argc, char *argv[]) {
     }
 
     H264Stream videoStream(videoSource, queue, pool, fps, bitrate, file);
-    AACStream audioStream(pcm, queue, pool);
+    //AACStream audioStream(pcm, queue, pool);
 
     std::thread videoEncodeThread(&H264Stream::run, &videoStream);
-    std::thread audioEncodeThread(&AACStream::run, &audioStream);
+    //std::thread audioEncodeThread(&AACStream::run, &audioStream);
 
     publisher.run();
 

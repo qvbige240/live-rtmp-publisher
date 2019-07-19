@@ -22,7 +22,12 @@ H264Encoder::H264Encoder(int width, int height, int fps, int bitrate): mPts(0) {
     param.rc.i_bitrate = bitrate;
 
     param.b_repeat_headers = 0; // add sps and pps manually
+
+#ifndef H264_AVCC
+    param.b_annexb = 1; // for the convenience of packing
+#else
     param.b_annexb = 0; // for the convenience of packing
+#endif
 
     x264_picture_alloc(&mPicture, param.i_csp, param.i_width, param.i_height);
 
@@ -63,6 +68,24 @@ static int vpk_file_save(const char *filename, void *data, size_t size)
 
     return ret;
 }
+
+#ifndef H264_AVCC
+static inline size_t find_start_code(unsigned char *buf)
+{
+	if (buf[0] != 0x00 || buf[1] != 0x00 ) {
+		return 0;
+	}
+
+	if (buf[2] == 0x01) {
+		return 3;
+	} else if (buf[2] == 0x00 && buf[3] == 0x01) {
+		return 4;
+	}
+
+	return 0;
+}
+#endif
+
 std::pair<int, char*> H264Encoder::encode(char* frame) {
     int temp, size;
     x264_picture_t out;
@@ -87,9 +110,14 @@ std::pair<int, char*> H264Encoder::encode(char* frame) {
         printf(" %02x", p[i]);
     printf("\n");
 
+#ifndef H264_AVCC
+    vpk_file_save("local.h264", p, size);
+#else
     char nalu_head[4] = {0x00, 0x00, 0x00, 0x01};
     vpk_file_save("local.h264", nalu_head, 4);
     vpk_file_save("local.h264", p, size);
+#endif //H264_AVCC
+
 #endif
 
     return std::make_pair(size, reinterpret_cast<char*>(mNal->p_payload));
@@ -113,6 +141,23 @@ std::pair<int, char*> H264Encoder::getMetadata() {
         printf("%02x%s", p[i], i % 16 == 15 ? "\n" : " ");
     printf("\n");
 
+#ifndef H264_AVCC
+    vpk_file_save("local.h264", p, size);
+    size_t pos = 0, start = 0;
+    size_t offset = find_start_code(p);
+    while (pos < size)
+    {
+        start = find_start_code(p + offset + pos);
+        if (start) break;
+        pos++;
+    }
+
+    p[2] = pos >> 8 & 0xff;
+    p[3] = pos & 0xff;
+
+    p[4+pos+2] = (size - pos - 8) >> 8 & 0xff;
+    p[4+pos+3] = (size - pos - 8) & 0xff;
+#else
     int len = (p[2] << 8) | p[3];
     int pps = (p[4 + len + 2] << 8) | p[4 + len + 3];
     printf("sps len: %d\n", len);
@@ -133,6 +178,8 @@ std::pair<int, char*> H264Encoder::getMetadata() {
     // pps
     vpk_file_save("local.h264", nalu_head, 4);
     vpk_file_save("local.h264", p + 8 + len, size - len - 8);
+#endif //H264_AVCC
+
 #endif
 
     return std::make_pair(size, reinterpret_cast<char*>(mNal->p_payload));

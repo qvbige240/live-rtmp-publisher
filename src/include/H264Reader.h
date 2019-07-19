@@ -27,6 +27,8 @@ private:
 	size_t	mLength;
 	size_t	mPos;
 	char	mMetadata[256];
+
+    char    mBuffer[1024 << 8];
 };
 
 #endif

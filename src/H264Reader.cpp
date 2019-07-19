@@ -10,11 +10,17 @@ static inline size_t find_start_code(const char *buf)
 		return 0;
 	}
 
+#ifndef H264_AVCC
+	if (buf[2] == 0x00 && buf[3] == 0x01) {
+		return 4;
+	}
+#else
 	if (buf[2] == 0x01) {
 		return 3;
 	} else if (buf[2] == 0x00 && buf[3] == 0x01) {
 		return 4;
 	}
+#endif
 
 	return 0;
 }
