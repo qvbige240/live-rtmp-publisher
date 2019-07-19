@@ -15,7 +15,11 @@ RTMPPacket H264RTMPPackager::pack(char* buf, const char* data, int length) const
 #endif
     packet.m_body = body;
 
+#ifdef H264_AVCC
     *(body++) = (data[4] & 0x1f) == 0x05 ? 0x17 : 0x27;
+#else
+    *(body++) = (data[0] & 0x1f) == 0x05 ? 0x17 : 0x27;
+#endif
     *(body++) = 0x01;
     *(body++) = 0x00;
     *(body++) = 0x00;
