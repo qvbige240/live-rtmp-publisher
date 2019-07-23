@@ -4,6 +4,21 @@
 H264Stream::H264Stream(FilteredVideoSource& source, PacketQueue& queue, MemoryPool& pool, int fps, int bitrate, char *file): 
     mInterval(1000 / fps), mSource(source), mQueue(queue), mPool(pool),
     mEncoder(source.getWidth(), source.getHeight(), fps, bitrate), mReader(file) {}
+	/*static int time_sub(struct timeval *next, struct timeval *prev, struct timeval *result)
+	{
+		if (prev->tv_sec > next->tv_sec) return -1;
+		if (prev->tv_sec == next->tv_sec && prev->tv_usec > next->tv_usec) return -1;
+
+		result->tv_sec = next->tv_sec - prev->tv_sec;
+		result->tv_usec = next->tv_usec - prev->tv_usec;
+		if (result->tv_usec < 0)
+		{
+			result->tv_sec--;
+			result->tv_usec += 1000000;
+		}
+
+		return 0;
+	}*/
 
 #ifdef USE_H264_READER
 void H264Stream::run() {

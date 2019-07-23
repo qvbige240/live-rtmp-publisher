@@ -4,20 +4,21 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
+
 static inline size_t find_start_code(const char *buf)
 {
 	if (buf[0] != 0x00 || buf[1] != 0x00 ) {
 		return 0;
 	}
 
-#ifndef H264_AVCC
-	if (buf[2] == 0x00 && buf[3] == 0x01) {
-		return 4;
-	}
-#else
+#if (defined H264_AVCC) && (!defined SUBNALU_TO_AVCC_FORMAT)
 	if (buf[2] == 0x01) {
 		return 3;
 	} else if (buf[2] == 0x00 && buf[3] == 0x01) {
+		return 4;
+	}
+#else
+	if (buf[2] == 0x00 && buf[3] == 0x01) {
 		return 4;
 	}
 #endif
@@ -138,7 +139,7 @@ static int read_nalu(const char *buffer, size_t size, size_t offset, h264_nalu_t
 	return 0;
 }
 
-//#define SUBNALU_TO_AVCC_FORMAT
+
 #ifdef SUBNALU_TO_AVCC_FORMAT
 static inline size_t find_sub_code(char *buf)
 {

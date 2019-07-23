@@ -22,5 +22,11 @@ configure_file(
 
 add_executable(publisher ${PROJECT_SOURCES})
 target_link_libraries(publisher ${PROJECT_LIBS})
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -D_DEBUG -D_SAVE_H264 -DUSE_H264_READER -DH264_AVCC -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -D_DEBUG -D_SAVE_H264 -DUSE_H264_READER -Wall")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -D_DEBUG -D_SAVE_H264 -Wall")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -D_DEBUG -D_SAVE_H264 -DH264_AVCC -Wall")
+# Annex_B format file and to AVCC format stream, record_annexb_01.h264
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -D_DEBUG -DUSE_H264_READER -DSUBNALU_TO_AVCC_FORMAT -DH264_AVCC -Wall")
+# Annex_B file stream, record_annexb_01.h264
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -D_DEBUG -DUSE_H264_READER -Wall")
+# AVCC file stream, record_avcc.h264
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -D_DEBUG -DUSE_H264_READER -DH264_AVCC -Wall")
