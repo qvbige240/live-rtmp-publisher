@@ -1,5 +1,6 @@
 #include "RTMPPublisher.h"
 #include <iostream>
+#include "flv_mux.h"
 
 RTMPPublisher::RTMPPublisher(PacketQueue& queue, MemoryPool& pool): mQueue(queue), mPool(pool) {
     mRTMP = RTMP_Alloc();
@@ -34,7 +35,32 @@ bool RTMPPublisher::connect(char *url) {
     return true;
 }
 
+bool RTMPPublisher::meta_data()
+{
+    bool ret;
+    uint8_t *meta_data;
+    size_t meta_data_size;
+    // bool    success = true;
+    // PrivInfo *thiz = p->priv;
+
+    if (!RTMP_IsConnected(mRTMP)) {
+        std::cout << "can not connect to server" << std::endl;
+        return false;
+    }
+
+    ret = flv_meta_data(&meta_data, &meta_data_size, false);
+
+    if (ret)
+    {
+        ret = RTMP_Write(mRTMP, (char *)meta_data, (int)meta_data_size) >= 0;
+        free(meta_data);
+    }
+    return ret;
+}
+
 void RTMPPublisher::run() {
+    meta_data();
+
     while (true) {
         RTMPPacket &packet = mQueue.front();
         packet.m_nInfoField2 = mRTMP->m_stream_id;

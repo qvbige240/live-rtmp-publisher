@@ -11,7 +11,9 @@ public:
 
     ~RTMPPublisher();
 
-    bool connect(char* url); 
+    bool connect(char* url);
+
+    bool meta_data();
 
     void run();
 private:
