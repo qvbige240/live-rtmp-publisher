@@ -28,6 +28,7 @@ void H264Stream::run() {
     }
 
     char *buf;
+    bool first = true;
     RTMPPacket packet;
     H264RTMPPackager packager;
     std::chrono::milliseconds duration;
@@ -52,7 +53,11 @@ void H264Stream::run() {
 
 		if (H264RTMPPackager::isKeyFrame(result.second)) {
             std::cout << "===== isKeyFrame" << std::endl;
-            mQueue.push(mMetadata, true);
+            if (first)
+            {
+                first = false;
+                mQueue.push(mMetadata, true);
+            }
         }
         buf = mPool.getChunk(packager.getBodyLength(result.first));
         packet = packager.pack(buf, result.second, result.first);

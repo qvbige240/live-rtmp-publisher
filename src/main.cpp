@@ -28,6 +28,9 @@ void showUsage() {
     exit(EXIT_FAILURE);
 }
 
+/* ./publisher -w 704 -h 576 -f 25 rtmp://172.17.13.222/live/1 -d /home/zouqing/work/resource/screen.h264 */
+/* ./publisher -w 704 -h 576 -f 25 -b 5120 rtmp://172.17.13.222/live/a1 */
+/* ./publisher -w 704 -h 576 -f 25 rtmp://172.17.13.222/live/a1 -d record_annexb_01.h264 */
 /* ./publisher -w 704 -h 576 -f 25 -b 5120 rtmp://172.17.25.131/live/1 */
 /* ./avcc_publisher -w 704 -h 576 -f 25 rtmp://172.20.25.228/live/1 -d record_01.h264 */
 /* ./publisher -w 704 -h 576 -f 25 rtmp://172.17.25.131/live/a1 -d record_annexb_01.h264 */

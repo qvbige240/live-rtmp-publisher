@@ -74,8 +74,9 @@ static int read_nalu(const char *buffer, size_t size, size_t offset, h264_nalu_t
 	size_t start = 0;
 	if (offset < size) {
 		size_t pos = 0;
-		while (offset + pos + 3 < size) {
-			start = find_start_code(buffer + offset + pos);
+		while (offset + pos < size) {
+            if (offset + pos + 3 < size)
+			    start = find_start_code(buffer + offset + pos);
 			if (start)
 				break;
 
@@ -95,6 +96,9 @@ static int read_nalu(const char *buffer, size_t size, size_t offset, h264_nalu_t
  			//		break;
  			//}
 		}
+
+        if (start == 0)
+            printf("can't find end with 00 00 01 or 00 00 00 01\n");
 
 		if(offset + pos + start == size){
 			nalu->nalu_len = pos + start;
@@ -139,6 +143,35 @@ static int read_nalu(const char *buffer, size_t size, size_t offset, h264_nalu_t
 	return 0;
 }
 
+static int read_nalu_ex(const char *buffer, size_t size, size_t offset, h264_nalu_t *nalu)
+{
+	size_t start = 0;
+	if (offset < size) {
+		size_t pos = 0;
+		while (offset + pos + 3 < size) {
+			start = find_start_code(buffer + offset + pos);
+			if (start)
+				break;
+
+			pos++;
+		}
+
+		if(offset + pos + start == size){
+			nalu->nalu_len = pos + start;
+		} else {
+			nalu->nalu_len = pos + 4;
+		}
+
+		nalu->nalu_data = (char*)(buffer + offset - 4);
+		//pNalu->forbidden_bit = pNalu->buf[0] & 0x80;
+		//pNalu->nal_reference_idc = pNalu->buf[0] & 0x60; // 2 bit
+		nalu->nalu_type = (nalu->nalu_data[0]) & 0x1f;// 5 bit
+
+		return (nalu->nalu_len + start);
+	}
+
+	return 0;
+}
 
 #ifdef SUBNALU_TO_AVCC_FORMAT
 static inline size_t find_sub_code(char *buf)
@@ -165,6 +198,7 @@ size_t multi_nalu_process(char *dst, char *src, size_t len)
 	{
 		while (pos + offset < len)
 		{
+            if (pos + offset + 2 < len)
 			start = find_sub_code(p + offset + pos);
 			if (start) break;
 			pos++;
@@ -239,6 +273,7 @@ std::pair<int, char*> H264Reader::readnal()
 	std::cout << "===== read readnal error or end, mPos" << mPos << std::endl;
 
 	std::cout << "===== restart =====" << std::endl;
+    printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 	mPos = find_start_code((const char*)mData);
 
 	len = read_nalu((const char*)mData, mLength, mPos, &nalu);
